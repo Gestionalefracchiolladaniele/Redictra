@@ -1,0 +1,9 @@
+# Redictra — Dipendenze del WEBHOOK serverless (Vercel).
+# Volutamente MINIME: il webhook fa solo onboarding (db + config + componi_brief).
+# NON serve python-telegram-bot (qui si parla con Telegram via HTTP diretto) né
+# feedparser/google-genai (lo scraping e l'AI girano su GitHub Actions, non qui).
+# Vercel usa questo file per la cartella api/.
+
+supabase==2.9.1
+python-dotenv==1.0.1
+tzdata
