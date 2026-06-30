@@ -1,0 +1,67 @@
+# ============================================================================
+# Redictra — Cron runner (GitHub Actions)
+# ----------------------------------------------------------------------------
+# Gira OGNI ORA (UTC). main.py decide da solo quali utenti servire (chi ha
+# localmente le 06:00 secondo il proprio timezone) ed esce subito se nessuno.
+# Un run vuoto costa pochi secondi → praticamente gratis.
+#
+# Gli ORARI NON sono in questo file: il cron è una sveglia oraria fissa. È il
+# codice Python che, leggendo il timezone di ogni utente dal DB, consegna a chi
+# in quel momento ha le 06:00 locali. Aggiungere utenti in nuovi fusi NON
+# richiede di toccare questo file.
+#
+# Il DIGEST MADRE (1 chiamata Gemini) viene generato dal PRIMO run utile della
+# giornata e salvato nel DB; gli altri fusi, nelle ore successive, lo riusano.
+#
+# Configurare i SECRET del repository (Settings → Secrets and variables → Actions):
+#   GEMINI_API_KEY, SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY,
+#   TELEGRAM_BOT_TOKEN, TELEGRAM_BOT_USERNAME,
+#   APIFY_TOKEN (abilita i commenti Reddit; senza → fallback RSS solo-post),
+#   ACCESS_CODE (opz.: bot invite-only),
+#   REDDIT_CLIENT_ID, REDDIT_CLIENT_SECRET, REDDIT_USER_AGENT (opz., futura API)
+# (vedi SETUP_TODO.md per come ottenerli)
+# ============================================================================
+
+name: Redictra cron runner
+
+on:
+  schedule:
+    - cron: "0 * * * *"   # ogni ora, al minuto 0 (UTC)
+  workflow_dispatch:        # esecuzione manuale dalla UI di GitHub
+
+concurrency:
+  group: redictra-cron
+  cancel-in-progress: false
+
+jobs:
+  deliver:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: "pip"
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+
+      - name: Run delivery
+        env:
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_BOT_USERNAME: ${{ secrets.TELEGRAM_BOT_USERNAME }}
+          APIFY_TOKEN: ${{ secrets.APIFY_TOKEN }}
+          ACCESS_CODE: ${{ secrets.ACCESS_CODE }}
+          REDDIT_CLIENT_ID: ${{ secrets.REDDIT_CLIENT_ID }}
+          REDDIT_CLIENT_SECRET: ${{ secrets.REDDIT_CLIENT_SECRET }}
+          REDDIT_USER_AGENT: ${{ secrets.REDDIT_USER_AGENT }}
+        run: python main.py

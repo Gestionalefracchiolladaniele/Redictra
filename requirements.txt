@@ -1,0 +1,24 @@
+# Redictra — Dipendenze Python
+# Versioni pinnate (minor) per riproducibilità. Aggiornare con cautela.
+# Installazione: pip install -r requirements.txt
+
+# --- Gemini (Google GenAI: 1 chiamata/giorno → digest madre) ---
+google-genai==1.0.0
+
+# --- Reddit: lettura feed RSS pubblici (default, nessuna chiave) ---
+feedparser==6.0.11
+
+# --- Reddit: modalità API/PRAW (OPZIONALE: solo quando avrai l'app approvata) ---
+# Installalo quando passi alla modalità "api" (dà anche i commenti):
+#   pip install praw==7.7.1
+# praw==7.7.1
+
+# --- Telegram bot (delivery + onboarding) ---
+python-telegram-bot==21.6
+
+# --- Supabase (DB via service role key) ---
+supabase==2.9.1
+
+# --- Utility ---
+python-dotenv==1.0.1          # caricamento .env in locale (in CI si usano i secret)
+tzdata                        # database fusi IANA per zoneinfo (necessario su Windows)
