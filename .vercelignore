@@ -1,0 +1,26 @@
+# Redictra — file da NON caricare su Vercel.
+# Vercel ospita SOLO il webhook (api/telegram.py). Tutto il resto del runtime
+# (cron del brief, scraping, AI) gira su GitHub Actions, NON qui. Escludendo
+# main.py evitiamo che Vercel lo scambi per l'entrypoint dell'app (errore
+# "does not export a top-level app/handler").
+#
+# I moduli che il webhook USA (config.py, db.py, telegram_delivery.py) NON vanno
+# qui: li include vercel.json via "includeFiles".
+
+# Entrypoint del cron (gira su GitHub Actions) — non è una funzione Vercel.
+main.py
+
+# Bot in polling (versione locale dell'onboarding) — sostituito dal webhook.
+bot_handler.py
+
+# Solo-cron: scraping Reddit e motore AI (girano su GitHub Actions).
+reddit_scraper.py
+ai_engine.py
+
+# Schema/CI/docs: non servono al runtime serverless.
+schema.sql
+.github/
+SETUP_TODO.md
+LINK_INVITO.md
+README.md
+CLAUDE.md

@@ -15,13 +15,17 @@ Markdown pulito + emoji come ancore visive. Output in inglese.
 
 import asyncio
 from datetime import date
-from typing import Optional
-
-from telegram import Bot
-from telegram.constants import ParseMode
-from telegram.error import TelegramError
+from typing import Optional, TYPE_CHECKING
 
 import config
+
+# `python-telegram-bot` serve SOLO per la CONSEGNA (consegna_brief), che gira su
+# GitHub Actions / bot in polling. NON è installato nel webhook serverless (Vercel),
+# che importa questo modulo solo per componi_brief (codice puro, niente Telegram).
+# Quindi importiamo `telegram` in modo LAZY, dentro le funzioni che lo usano: così
+# importare telegram_delivery non fallisce dove python-telegram-bot manca.
+if TYPE_CHECKING:  # solo per i type checker, non a runtime
+    from telegram import Bot
 
 # Telegram ha un limite ~4096 caratteri per messaggio.
 MAX_LEN_MSG = 3900
@@ -106,8 +110,16 @@ def _spezza(testo: str, max_len: int = MAX_LEN_MSG) -> list[str]:
     return pezzi
 
 
-async def consegna_brief(chat_id: int, testo: str, bot: Optional[Bot] = None) -> None:
-    """Invia il brief a un utente. Punto unico da cui passa ogni invio."""
+async def consegna_brief(chat_id: int, testo: str, bot: "Optional[Bot]" = None) -> None:
+    """Invia il brief a un utente. Punto unico da cui passa ogni invio.
+
+    Import di `telegram` LAZY (qui dentro): consegna_brief gira solo dove
+    python-telegram-bot è installato (GitHub Actions / polling), non nel webhook.
+    """
+    from telegram import Bot
+    from telegram.constants import ParseMode
+    from telegram.error import TelegramError
+
     proprietario_bot = bot is None
     if bot is None:
         bot = Bot(token=config.TELEGRAM_BOT_TOKEN)
